@@ -27,9 +27,13 @@
 #include <dwmapi.h>
 #include <any>
 #include <TlHelp32.h>
+#include <comip.h>
+#pragma comment(lib, "comsuppw.lib")
 
 #include <d3d11.h>
 #pragma comment(lib, "d3d11.lib")
+#include <shlwapi.h>
+#pragma comment(lib, "shlwapi.lib")
 
 // third-party
 #define IMGUI_ENABLE_VIEWPORTS
@@ -45,5 +49,7 @@ static IDXGISwapChain*          g_pSwapChain = nullptr;
 static bool                     g_SwapChainOccluded = false;
 static UINT                     g_ResizeWidth = 0, g_ResizeHeight = 0;
 static ID3D11RenderTargetView*  g_mainRenderTargetView = nullptr;
+
+#include "../src/utils/utils.h"
 
 #include "../src/menu/menu.h"

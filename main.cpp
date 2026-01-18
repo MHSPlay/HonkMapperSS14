@@ -115,17 +115,19 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmd
         return 1;
     }
 
-    std::thread([]()
+    std::thread( [ device = g_pd3dDevice ]( )
         {
             // main loop
-            while (true)
+            while ( true )
             {
 
+                g_utils->update_maps( device );
+
                 // save CPU
-                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                std::this_thread::sleep_for( std::chrono::milliseconds( 200 ) );
             }
 
-        }).detach();
+        }).detach( );
 
     // Show the window
     ::ShowWindow(hwnd, SW_HIDE);
