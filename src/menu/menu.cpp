@@ -217,16 +217,109 @@ void c_menu::on_render()
 
             case 1:
             {
+                static int selected_tile = -1;
+                static char search_buffer[ 256 ] = "";
 
-                ImGui::BeginChild( "LeftPanel_Tiles", ImVec2( 250, 0 ), true );
+                ImGui::BeginChild( "LeftPanel_Tiles", ImVec2( 400, 0 ), true );
                 ImGui::Text( "Tiles:" );
+
+                ImGui::PushItemWidth( -1 );
+                if ( ImGui::InputTextWithHint( "##search", "Search tiles...", search_buffer, IM_ARRAYSIZE( search_buffer ) ) )
+                {
+                    // При вводе текста сбрасываем выбор
+                }
+                ImGui::PopItemWidth();
+
+                std::string search_str = search_buffer;
+                std::transform( search_str.begin( ), search_str.end( ), search_str.begin( ), ::tolower );
+
+                int visible_count = 0;
+
                 ImGui::Separator( );
                 {
-                    for ( int i = 0; i < 10; i++ ) {
-                        if ( ImGui::Selectable( ( "Item " + std::to_string( i ) ).c_str( ) ) ) {
+                    for ( size_t i = 0; i < g_utils->tiles.size( ); i++ )
+                    {
+                        const auto& tile = g_utils->tiles[ i ];
 
+                        if ( search_str.length( ) > 0 )
+                        {
+                            std::string tile_name = tile.name;
+                            std::transform( tile_name.begin( ), tile_name.end( ), tile_name.begin( ), ::tolower );
+
+                            if ( tile_name.find( search_str ) == std::string::npos )
+                                continue;
                         }
+
+                        visible_count++;
+
+                        ImGui::PushID( static_cast< int >( i ) );
+
+                        bool is_selected = ( selected_tile == static_cast< int >( i ) );
+                        if (is_selected)
+                        {
+                            ImGui::PushStyleColor( ImGuiCol_Button, ImVec4( 0.3f, 0.5f, 0.8f, 1.0f ) );
+                            ImGui::PushStyleColor( ImGuiCol_ButtonHovered, ImVec4( 0.4f, 0.6f, 0.9f, 1.0f ) );
+                        }
+                        else
+                        {
+                            ImGui::PushStyleColor( ImGuiCol_Button, ImVec4( 0.15f, 0.15f, 0.15f, 1.0f ) );
+                            ImGui::PushStyleColor( ImGuiCol_ButtonHovered, ImVec4( 0.25f, 0.25f, 0.25f, 1.0f ) );
+                        }
+
+                        if ( ImGui::Button( "##tile_button", ImVec2( -1, 70 ) ) )
+                            selected_tile = static_cast< int >( i );
+
+                        ImGui::PopStyleColor( 2 );
+
+                        ImVec2 button_pos = ImGui::GetItemRectMin( );
+                        ImVec2 button_size = ImGui::GetItemRectSize( );
+                        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+                        if ( tile.texture )
+                        {
+                            float max_size = 60.0f;
+                            float scale = max_size / max( tile.width, tile.height );
+                            ImVec2 img_size( tile.width * scale, tile.height * scale );
+
+                            ImVec2 img_pos(
+                                button_pos.x + 5,
+                                button_pos.y + ( button_size.y - img_size.y ) * 0.5f
+                            );
+
+                            draw_list->AddImage(
+                                ( void* )tile.texture,
+                                img_pos,
+                                ImVec2( img_pos.x + img_size.x, img_pos.y + img_size.y )
+                            );
+
+                            ImVec2 text_pos(
+                                button_pos.x + max_size + 15,
+                                button_pos.y + button_size.y * 0.5f - ImGui::GetTextLineHeight( ) * 0.5f
+                            );
+
+                            draw_list->AddText( text_pos, IM_COL32( 255, 255, 255, 255 ), tile.name.c_str( ) );
+                        }
+                        else
+                        {
+                            ImVec2 text_pos(
+                                button_pos.x + 10,
+                                button_pos.y + button_size.y * 0.5f - ImGui::GetTextLineHeight( ) * 0.5f
+                            );
+
+                            draw_list->AddText( text_pos, IM_COL32( 255, 255, 255, 255 ), tile.name.c_str( ) );
+                        }
+
+                        ImGui::PopID( );
                     }
+
+                    if ( g_utils->tiles.empty( ) )
+                    {
+                        ImGui::TextDisabled( "No tiles found..." );
+                        ImGui::TextDisabled( "Check Resources/Textures/Tiles folder" );
+                    }
+                    else if ( visible_count == 0 && search_str.length( ) > 0 )
+                        ImGui::TextDisabled( "No tiles match search" );
+                    
                 }
                 ImGui::EndChild( );
 
@@ -234,10 +327,137 @@ void c_menu::on_render()
 
                 float centerWidth = ImGui::GetContentRegionAvail( ).x - 400;
                 ImGui::BeginChild( "CenterPanel_ViewPort", ImVec2( centerWidth, 0 ), true );
+
                 ImGui::Text( "ViewPort:" );
                 ImGui::Separator( );
                 {
-                    ImGui::Text( "Main content area" );
+                    ImVec2 viewport_pos = ImGui::GetCursorScreenPos( );
+                    ImVec2 viewport_size = ImGui::GetContentRegionAvail( );
+
+                    if ( selected_tile >= 0 && selected_tile < static_cast< int >( g_utils->tiles.size( ) ) )
+                    {
+                        const auto& tile = g_utils->tiles[ selected_tile ];
+
+                        ImGui::Text( "Selected Tile:" );
+                        ImGui::SameLine( );
+                        ImGui::TextColored( ImVec4( 0.5f, 0.8f, 1.0f, 1.0f ), "%s", tile.name.c_str( ) );
+                        ImGui::SameLine( );
+                        ImGui::TextDisabled( "(Right click to deselect)" );
+                        ImGui::Separator( );
+
+                        // @todo: make grid zoomable / make grid coordinates / make checkbox for snap tile to grid
+                        ImGui::BeginChild( "DrawArea", ImVec2( 0, 0 ), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse );
+                        {
+                            if ( ImGui::IsWindowHovered( ) && ImGui::IsMouseClicked( ImGuiMouseButton_Right ) )
+                                selected_tile = -1;
+
+                            ImVec2 canvas_pos = ImGui::GetCursorScreenPos( );
+                            ImVec2 canvas_size = ImGui::GetContentRegionAvail( );
+
+                            ImDrawList* draw_list = ImGui::GetWindowDrawList( );
+
+                            const float grid_size = 64.0f;
+                            ImU32 grid_color = IM_COL32( 50, 50, 50, 255 );
+
+                            for ( float x = 0; x < canvas_size.x; x += grid_size )
+                            {
+                                draw_list->AddLine(
+                                    ImVec2( canvas_pos.x + x, canvas_pos.y ),
+                                    ImVec2( canvas_pos.x + x, canvas_pos.y + canvas_size.y ),
+                                    grid_color
+                                );
+                            }
+
+                            for ( float y = 0; y < canvas_size.y; y += grid_size )
+                            {
+                                draw_list->AddLine(
+                                    ImVec2( canvas_pos.x, canvas_pos.y + y ),
+                                    ImVec2( canvas_pos.x + canvas_size.x, canvas_pos.y + y ),
+                                    grid_color
+                                );
+                            }
+
+                            if ( ImGui::IsWindowHovered( ) )
+                            {
+                                ImVec2 mouse_pos = ImGui::GetMousePos( );
+
+                                if ( tile.texture )
+                                {
+                                    static float tile_scale = 2.0f;
+                                    ImVec2 tile_size( tile.width * tile_scale, tile.height * tile_scale );
+
+                                    ImVec2 tile_pos(
+                                        mouse_pos.x - tile_size.x * 0.5f,
+                                        mouse_pos.y - tile_size.y * 0.5f
+                                    );
+
+                                    draw_list->AddRectFilled(
+                                        tile_pos,
+                                        ImVec2( tile_pos.x + tile_size.x, tile_pos.y + tile_size.y ),
+                                        IM_COL32( 255, 255, 255, 50 )
+                                    );
+
+                                    draw_list->AddImage(
+                                        ( void* )tile.texture,
+                                        tile_pos,
+                                        ImVec2( tile_pos.x + tile_size.x, tile_pos.y + tile_size.y ),
+                                        ImVec2( 0, 0 ),
+                                        ImVec2( 1, 1 ),
+                                        IM_COL32( 255, 255, 255, 200 )
+                                    );
+
+                                    draw_list->AddRect(
+                                        tile_pos,
+                                        ImVec2( tile_pos.x + tile_size.x, tile_pos.y + tile_size.y ),
+                                        IM_COL32( 100, 200, 255, 255 ),
+                                        0.0f,
+                                        0,
+                                        2.0f
+                                    );
+                                }
+
+                                // cursor position - @todo: change it on ss14 map position
+                                ImVec2 relative_pos(
+                                    mouse_pos.x - canvas_pos.x,
+                                    mouse_pos.y - canvas_pos.y
+                                );
+
+                                char coord_text[ 64 ];
+                                sprintf_s( coord_text, "X: %.0f Y: %.0f", relative_pos.x, relative_pos.y );
+
+                                ImVec2 text_size = ImGui::CalcTextSize( coord_text );
+                                ImVec2 text_pos(
+                                    mouse_pos.x + 15,
+                                    mouse_pos.y + 15
+                                );
+
+                                draw_list->AddRectFilled(
+                                    ImVec2( text_pos.x - 3, text_pos.y - 3 ),
+                                    ImVec2( text_pos.x + text_size.x + 3, text_pos.y + text_size.y + 3 ),
+                                    IM_COL32( 0, 0, 0, 200 )
+                                );
+
+                                draw_list->AddText(
+                                    text_pos,
+                                    IM_COL32( 255, 255, 255, 255 ),
+                                    coord_text
+                                );
+                            }
+                        }
+                        ImGui::EndChild( );
+                    }
+                    else // @todo: check have been placed tile?
+                    {
+                        ImVec2 region = ImGui::GetContentRegionAvail( );
+                        ImVec2 text_size = ImGui::CalcTextSize( "Select a tile from the left panel" );
+
+                        ImGui::SetCursorPos( ImVec2(
+                            ( region.x - text_size.x ) * 0.5f,
+                            ( region.y - text_size.y ) * 0.5f
+                        ) );
+
+                        ImGui::TextDisabled( "Select a tile from the left panel" );
+                    }
                 }
                 ImGui::EndChild( );      
 

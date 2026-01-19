@@ -123,6 +123,11 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmd
 
                 g_utils->update_maps( device );
 
+                if ( !g_utils->folder_path.empty( ) && g_utils->tiles.empty( ) )
+                    g_utils->load_tiles( device );
+                
+
+
                 // save CPU
                 std::this_thread::sleep_for( std::chrono::milliseconds( 200 ) );
             }
@@ -233,6 +238,7 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmd
     }
 
     // Cleanup
+    g_utils->cleanup_textures();
     ImGui_ImplDX11_Shutdown();
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
