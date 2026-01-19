@@ -57,3 +57,10 @@ void c_utils::update_maps( ID3D11Device* device )
     }
 
 }
+    
+void c_utils::create_new_map(  )
+{
+
+
+
+}
