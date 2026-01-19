@@ -56,7 +56,7 @@ bool select_path( const char* buttonName, char* text, size_t bufferSize )
 void c_menu::on_render()
 {
     static ImVec2 window_size = ImVec2( 800, 600 );
-    static ImVec2 window_pos = ImVec2( ( GetSystemMetrics( SM_CXSCREEN) - 800 ) / 2, ( GetSystemMetrics( SM_CYSCREEN ) - 600) / 2 );
+    static ImVec2 window_pos = ImVec2( ( GetSystemMetrics( SM_CXSCREEN ) - 800 ) / 2, ( GetSystemMetrics( SM_CYSCREEN ) - 600 ) / 2 );
     static int menu_state = 0;
     static bool first_frame = true;
     
@@ -75,7 +75,7 @@ void c_menu::on_render()
 
     ImGui::SetNextWindowPos( window_pos, ImGuiCond_Always );
     ImGui::SetNextWindowSize( window_size, ImGuiCond_Always );
-	ImGui::Begin( "HonkMapper - github.com/MHSPlay/HonkMapperSS14", nullptr, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse );
+	ImGui::Begin( "HonkMapper - github.com/MHSPlay/HonkMapperSS14", nullptr, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse );
 	{
         static bool open_popup_select_folder = false;
         static bool open_popup_new_map = false;
@@ -232,50 +232,46 @@ void c_menu::on_render()
 
                 ImGui::SameLine( );
 
-                float centerWidth = ImGui::GetContentRegionAvail( ).x - 300;
+                float centerWidth = ImGui::GetContentRegionAvail( ).x - 400;
                 ImGui::BeginChild( "CenterPanel_ViewPort", ImVec2( centerWidth, 0 ), true );
                 ImGui::Text( "ViewPort:" );
-                ImGui::Separator();
+                ImGui::Separator( );
                 {
-                    ImGui::Text("Main content area");
+                    ImGui::Text( "Main content area" );
                 }
-                ImGui::EndChild();      
+                ImGui::EndChild( );      
 
-                ImGui::SameLine();
+                ImGui::SameLine( );
 
-                ImGui::BeginChild("RightPanel_Container", ImVec2(300, 0), true);
+                ImGui::BeginChild( "RightPanel_Container", ImVec2( 400, 0 ), true );
                 {
-                    ImGui::BeginChild("RightPanel_Entities", ImVec2(0, ImGui::GetContentRegionAvail().y * 0.5f), true);
-                    ImGui::Text("Entities:");
-                    ImGui::Separator();
+                    ImGui::BeginChild( "RightPanel_Entities", ImVec2( 0, ImGui::GetContentRegionAvail( ).y * 0.5f ), true );
+                    ImGui::Text( "Entities:" );
+                    ImGui::Separator( );
                     {
-                        for (int i = 0; i < 5; i++) {
-                            ImGui::Text("Entity %d", i);
+                        for ( int i = 0; i < 5; i++ ) {
+                            ImGui::Text( "Entity %d", i );
                         }
                     }
-                    ImGui::EndChild();
+                    ImGui::EndChild( );
 
-                    ImGui::Spacing();
+                    ImGui::Spacing( );
 
-                    ImGui::BeginChild("RightPanel_Decals", ImVec2(0, ImGui::GetContentRegionAvail().y), true);
-                    ImGui::Text("Decals:");
-                    ImGui::Separator();
+                    ImGui::BeginChild( "RightPanel_Decals", ImVec2( 0, ImGui::GetContentRegionAvail( ).y ), true );
+                    ImGui::Text( "Decals:" );
+                    ImGui::Separator( );
                     {
-                        for (int i = 0; i < 5; i++) {
-                            ImGui::Text("Decal %d", i);
+                        for ( int i = 0; i < 5; i++ ) {
+                            ImGui::Text( "Decal %d", i );
                         }
                     }
-                    ImGui::EndChild();
+                    ImGui::EndChild( );
                 }
-                ImGui::EndChild();
+                ImGui::EndChild( );
 
             }    
             break;
         }
-
-
-
-
 
 	}
 	ImGui::End( );
